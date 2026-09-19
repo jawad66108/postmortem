@@ -1,0 +1,32 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Environment variables (secrets — never commit these)
+.env
+.env.local
+.env.*.local
+**/.env
+
+# Build output
+dist/
+build/
+**/dist/
+**/build/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Editor/OS junk
+.vscode/
+.DS_Store
+Thumbs.db
+
+# TypeScript build info
+*.tsbuildinfo
+
+# Test/coverage output
+coverage/
