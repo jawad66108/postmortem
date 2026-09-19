@@ -126,6 +126,11 @@ export async function callModelJSON<T = unknown>(
 
   const jsonText = extractLastJSONBlock(raw);
 
+  // TEMP DEBUG — remove once rank.ts / repro.ts are confirmed reliable
+  console.log(
+    `[${stage}] raw response length: ${raw.length} chars, last 300 chars:\n...${raw.slice(-300)}`,
+  );
+
   if (!jsonText) {
     console.error(`[${stage}] No valid JSON block found in model output:`, raw);
     throw new Error(

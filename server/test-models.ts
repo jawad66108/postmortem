@@ -1,7 +1,9 @@
 // server/test-models.ts
 import "dotenv/config";
-import { callModel, MODELS } from "./nebius/client";
 import { extractFromTrace } from "./pipeline/extract";
+import { retrieveEvidence } from "./pipeline/retrieve";
+import { rankHypotheses } from "./pipeline/rank";
+import { generateRepro } from "./pipeline/repro";
 
 const trace = `Traceback (most recent call last):
   File "app.py", line 12, in <module>
@@ -9,23 +11,22 @@ const trace = `Traceback (most recent call last):
   File "/usr/lib/python3/site-packages/pandas/__init__.py", line 22, in <module>
     from pandas.compat import is_numpy_dev
 ImportError: cannot import name 'is_numpy_dev' from 'pandas.compat' (/usr/lib/python3/site-packages/pandas/compat/__init__.py)`;
-extractFromTrace(trace).then((r) => console.log(JSON.stringify(r, null, 2)));
+
 async function main() {
-  for (const stage of Object.keys(MODELS) as (keyof typeof MODELS)[]) {
-    try {
-      const text = await callModel(
-        stage,
-        "You are a helpful assistant.",
-        "Say hello in one short sentence.",
-      );
-      console.log(`✅ [${stage}] (${MODELS[stage]}) ->`, text);
-    } catch (err) {
-      console.error(
-        `❌ [${stage}] (${MODELS[stage]}) failed:`,
-        (err as Error).message,
-      );
-    }
-  }
+  const extracted = await extractFromTrace(trace);
+  console.log("Extracted:", JSON.stringify(extracted, null, 2));
+
+  const evidence = await retrieveEvidence(extracted);
+  console.log("Evidence:", JSON.stringify(evidence, null, 2));
+
+  const hypotheses = await rankHypotheses(extracted, evidence);
+  console.log("Hypotheses:", JSON.stringify(hypotheses, null, 2));
+
+  const repro = await generateRepro(extracted, hypotheses[0]);
+  console.log("Repro:", JSON.stringify(repro, null, 2));
 }
 
-main();
+main().catch((err) => {
+  console.error("Pipeline failed:", err);
+  process.exit(1);
+});

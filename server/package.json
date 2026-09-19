@@ -11,6 +11,7 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "@tavily/core": "^0.7.13",
     "dotenv": "^18.0.1",
     "openai": "^7.19.0"
   },
