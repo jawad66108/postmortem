@@ -38,25 +38,51 @@ export async function extractFromTrace(
     throw new Error("extractFromTrace: received empty input");
   }
 
-  const result = await callModelJSON<Partial<ExtractedError>>(
-    "extract",
-    SYSTEM_PROMPT,
-    rawTrace.trim(),
-    { temperature: 0 }, // maxTokens defaults to 3000 in callModelJSON — this model reasons regardless of /no_think, so it needs the room
-  );
+  const MAX_ATTEMPTS = 3;
+  let last: Partial<ExtractedError> = {};
+
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    const result = await callModelJSON<Partial<ExtractedError>>(
+      "extract",
+      SYSTEM_PROMPT,
+      rawTrace.trim(),
+      { temperature: 0 }, // maxTokens defaults to 3000 in callModelJSON — this model reasons regardless of /no_think, so it needs the room
+    );
+
+    last = result;
+
+    // This model is a MoE architecture and isn't perfectly deterministic even
+    // at temperature 0 — occasionally it comes back with everything empty on
+    // an otherwise-parseable input. Treat that as a failed attempt and retry
+    // rather than trusting it, since a retry costs a fraction of a cent.
+    const looksEmpty =
+      (!result.language || result.language.toLowerCase() === "unknown") &&
+      (!result.error_class || result.error_class.toLowerCase() === "unknown") &&
+      (!result.packages || result.packages.length === 0);
+
+    if (!looksEmpty) break;
+
+    if (attempt < MAX_ATTEMPTS) {
+      console.warn(`[extract] Attempt ${attempt} came back empty, retrying...`);
+    } else {
+      console.warn(
+        `[extract] All ${MAX_ATTEMPTS} attempts came back empty for this input.`,
+      );
+    }
+  }
 
   // Normalize in case the model omits a key or returns a wrong-shaped value —
   // downstream stages (retrieve.ts, rank.ts) should be able to rely on this shape.
   return {
-    language: result.language ?? "unknown",
-    framework: result.framework ?? null,
-    error_class: result.error_class ?? "unknown",
-    message: result.message ?? "",
-    symbols: Array.isArray(result.symbols) ? result.symbols : [],
-    packages: Array.isArray(result.packages) ? result.packages : [],
+    language: last.language ?? "unknown",
+    framework: last.framework ?? null,
+    error_class: last.error_class ?? "unknown",
+    message: last.message ?? "",
+    symbols: Array.isArray(last.symbols) ? last.symbols : [],
+    packages: Array.isArray(last.packages) ? last.packages : [],
     versions:
-      typeof result.versions === "object" && result.versions !== null
-        ? result.versions
+      typeof last.versions === "object" && last.versions !== null
+        ? last.versions
         : {},
   };
 }
