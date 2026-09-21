@@ -77,18 +77,29 @@ ${formatEvidenceForPrompt(evidence)}`;
   let hypotheses: Hypothesis[] = [];
 
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-    const result = await callModelJSON<{ hypotheses?: Partial<Hypothesis>[] }>(
-      "rank",
-      SYSTEM_PROMPT,
-      userPrompt,
-      { temperature: 0.3, maxTokens: 5000 }, // large evidence sets + /think reasoning both eat into this — this model needs the most headroom of all three
-    );
+    let result: { hypotheses?: Partial<Hypothesis>[] };
 
-    // TEMP DEBUG — remove once rank.ts is confirmed reliable
-    console.log(
-      `[rank] Attempt ${attempt} parsed result:`,
-      JSON.stringify(result, null, 2),
-    );
+    try {
+      result = await callModelJSON<{ hypotheses?: Partial<Hypothesis>[] }>(
+        "rank",
+        SYSTEM_PROMPT,
+        userPrompt,
+        { temperature: 0.3, maxTokens: 5000 }, // large evidence sets + /think reasoning both eat into this — this model needs the most headroom of all three
+      );
+    } catch (err) {
+      // A thrown error (e.g. no valid JSON found at all) is just as much a
+      // failed attempt as an empty-but-parseable result — treat it the same
+      // way instead of letting it escape the retry loop entirely.
+      console.warn(
+        `[rank] Attempt ${attempt} threw: ${(err as Error).message}`,
+      );
+      if (attempt === MAX_ATTEMPTS) {
+        console.warn(
+          `[rank] All ${MAX_ATTEMPTS} attempts failed for this input.`,
+        );
+      }
+      continue;
+    }
 
     hypotheses = (result.hypotheses ?? [])
       .map((h, i) => ({

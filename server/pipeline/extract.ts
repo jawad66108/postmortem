@@ -42,12 +42,29 @@ export async function extractFromTrace(
   let last: Partial<ExtractedError> = {};
 
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-    const result = await callModelJSON<Partial<ExtractedError>>(
-      "extract",
-      SYSTEM_PROMPT,
-      rawTrace.trim(),
-      { temperature: 0 }, // maxTokens defaults to 3000 in callModelJSON — this model reasons regardless of /no_think, so it needs the room
-    );
+    let result: Partial<ExtractedError>;
+
+    try {
+      result = await callModelJSON<Partial<ExtractedError>>(
+        "extract",
+        SYSTEM_PROMPT,
+        rawTrace.trim(),
+        { temperature: 0 }, // maxTokens defaults to 3000 in callModelJSON — this model reasons regardless of /no_think, so it needs the room
+      );
+    } catch (err) {
+      // A thrown error (e.g. no valid JSON found at all) is just as much a
+      // failed attempt as an empty-but-parseable result — treat it the same
+      // way instead of letting it escape the retry loop entirely.
+      console.warn(
+        `[extract] Attempt ${attempt} threw: ${(err as Error).message}`,
+      );
+      if (attempt === MAX_ATTEMPTS) {
+        console.warn(
+          `[extract] All ${MAX_ATTEMPTS} attempts failed for this input.`,
+        );
+      }
+      continue;
+    }
 
     last = result;
 

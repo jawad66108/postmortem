@@ -8,9 +8,9 @@ const client = new OpenAI({
 
 // One model per pipeline stage — confirmed Public-endpoint IDs from the catalog.
 export const MODELS = {
-  extract: "nvidia/Nemotron-3_5-Lightning", // extract.ts — cheap/fast classification
-  repro: "nvidia/nemotron-3-super-120b-a12b", // repro.ts — mid-tier reproduction snippet
-  rank: "nvidia/Nemotron-3-Ultra-550b-a55b", // rank.ts — largest, does the actual judgment call
+  extract: "nvidia/Nemotron-3_5-Lightning",        // extract.ts — cheap/fast classification
+  repro: "nvidia/nemotron-3-super-120b-a12b",      // repro.ts — mid-tier reproduction snippet
+  rank: "nvidia/Nemotron-3-Ultra-550b-a55b",       // rank.ts — largest, does the actual judgment call
 } as const;
 
 export type PipelineStage = keyof typeof MODELS;
@@ -32,7 +32,7 @@ export async function callModel(
   stage: PipelineStage,
   systemPrompt: string,
   userPrompt: string,
-  opts: CallOptions = {},
+  opts: CallOptions = {}
 ): Promise<string> {
   const model = MODELS[stage];
 
@@ -47,9 +47,7 @@ export async function callModel(
   });
 
   const message = completion.choices[0]?.message as
-    | ((typeof completion.choices)[0]["message"] & {
-        reasoning_content?: string;
-      })
+    | (typeof completion.choices[0]["message"] & { reasoning_content?: string })
     | undefined;
 
   if (!message) {
@@ -62,10 +60,7 @@ export async function callModel(
     // Log the raw payload once so you can see exactly what came back —
     // this is the case to watch for in your first real run against
     // each of the three models.
-    console.error(
-      `[${stage}] Empty content AND reasoning_content:`,
-      JSON.stringify(message),
-    );
+    console.error(`[${stage}] Empty content AND reasoning_content:`, JSON.stringify(message));
     throw new Error(`[${stage}] Model ${model} returned no usable text`);
   }
 
@@ -81,7 +76,7 @@ export async function callModel(
  * meant as its answer.
  */
 function extractLastJSONBlock(text: string): string | null {
-  for (let end = text.length - 1; end >= 0; end--) {
+  outer: for (let end = text.length - 1; end >= 0; end--) {
     const closeChar = text[end];
     if (closeChar !== "}" && closeChar !== "]") continue;
     const openChar = closeChar === "}" ? "{" : "[";
@@ -93,11 +88,20 @@ function extractLastJSONBlock(text: string): string | null {
       if (depth === 0) {
         const candidate = text.slice(start, end + 1);
         try {
-          JSON.parse(candidate);
-          return candidate; // first balanced+valid block found scanning from the end wins
+          const parsed = JSON.parse(candidate);
+          // Every schema in this pipeline expects a top-level object, never
+          // a bare array or primitive. Without this check, an incidental
+          // "[2]" from a citation marker like "Evidence [2]" in the model's
+          // own reasoning can parse as valid JSON and get mistaken for the
+          // real answer. Reject anything that isn't a plain object and keep
+          // scanning further back in the text.
+          if (parsed !== null && typeof parsed === "object" && !Array.isArray(parsed)) {
+            return candidate;
+          }
         } catch {
-          break; // this closing bracket didn't yield valid JSON — keep scanning further back
+          // not valid JSON at all — keep scanning further back
         }
+        continue outer;
       }
     }
   }
@@ -115,35 +119,26 @@ export async function callModelJSON<T = unknown>(
   stage: PipelineStage,
   systemPrompt: string,
   userPrompt: string,
-  opts: CallOptions = {},
+  opts: CallOptions = {}
 ): Promise<T> {
   const raw = await callModel(
     stage,
     `${systemPrompt}\n\nWhen you have finished reasoning, output the final answer as a single JSON object on its own, as the very last thing in your response.`,
     userPrompt,
-    { maxTokens: 3000, ...opts }, // reasoning models need real headroom to finish their thought before answering
+    { maxTokens: 3000, ...opts } // reasoning models need real headroom to finish their thought before answering
   );
 
   const jsonText = extractLastJSONBlock(raw);
 
-  // TEMP DEBUG — remove once rank.ts / repro.ts are confirmed reliable
-  console.log(
-    `[${stage}] raw response length: ${raw.length} chars, last 300 chars:\n...${raw.slice(-300)}`,
-  );
-
   if (!jsonText) {
     console.error(`[${stage}] No valid JSON block found in model output:`, raw);
-    throw new Error(
-      `[${stage}] Could not find a valid JSON object in the response`,
-    );
+    throw new Error(`[${stage}] Could not find a valid JSON object in the response`);
   }
 
   try {
     return JSON.parse(jsonText) as T;
   } catch (err) {
     console.error(`[${stage}] Failed to parse JSON from model output:`, raw);
-    throw new Error(
-      `[${stage}] Could not parse JSON response: ${(err as Error).message}`,
-    );
+    throw new Error(`[${stage}] Could not parse JSON response: ${(err as Error).message}`);
   }
 }

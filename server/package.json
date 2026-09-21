@@ -12,10 +12,14 @@
   "type": "commonjs",
   "dependencies": {
     "@tavily/core": "^0.7.13",
+    "cors": "^2.8.6",
     "dotenv": "^18.0.1",
+    "express": "^5.2.1",
     "openai": "^7.19.0"
   },
   "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
     "@types/node": "^26.6.2",
     "ts-node": "^10.9.2",
     "tsx": "^4.23.13",
