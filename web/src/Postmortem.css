@@ -1,0 +1,234 @@
+/* web/src/postmortem.css */
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Slab:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap");
+
+:root {
+  --paper: #ede6d6;
+  --paper-light: #f5f1e7;
+  --ink: #1f2421;
+  --ink-soft: #4a4640;
+  --rule: #c9bfa8;
+  --high: #2e5339;
+  --medium: #a67c3d;
+  --low: #8b8378;
+  --danger: #7a2e2e;
+  --font-serif: "IBM Plex Slab", Georgia, serif;
+  --font-mono: "IBM Plex Mono", "Courier New", monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-serif);
+  margin: 0;
+}
+
+.case-file {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 3rem 1.5rem 6rem;
+}
+
+.case-file__title {
+  font-size: 1.9rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin: 0 0 0.35rem;
+}
+
+.case-file__subtitle {
+  color: var(--ink-soft);
+  font-size: 0.95rem;
+  margin: 0 0 2.5rem;
+  max-width: 46ch;
+  line-height: 1.5;
+}
+
+/* --- Trace intake --- */
+
+.intake {
+  background: var(--paper-light);
+  border: 1px solid var(--rule);
+  padding: 1.25rem;
+  margin-bottom: 2.5rem;
+}
+
+.intake__label {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+  margin-bottom: 0.6rem;
+}
+
+.intake textarea {
+  width: 100%;
+  min-height: 160px;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  line-height: 1.5;
+  padding: 0.85rem;
+  resize: vertical;
+}
+
+.intake textarea:focus {
+  outline: 2px solid var(--ink);
+  outline-offset: 1px;
+}
+
+.intake__submit {
+  margin-top: 0.9rem;
+  background: var(--ink);
+  color: var(--paper-light);
+  border: none;
+  font-family: var(--font-serif);
+  font-size: 0.95rem;
+  font-weight: 600;
+  padding: 0.65rem 1.4rem;
+  cursor: pointer;
+}
+
+.intake__submit:disabled {
+  background: var(--ink-soft);
+  cursor: wait;
+}
+
+.intake__error {
+  color: var(--danger);
+  font-size: 0.85rem;
+  margin-top: 0.7rem;
+}
+
+/* --- Hypothesis cards --- */
+
+.hypothesis {
+  border: 1px solid var(--rule);
+  background: var(--paper-light);
+  padding: 1.25rem 1.4rem;
+  margin-bottom: 1.1rem;
+  position: relative;
+}
+
+.hypothesis__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.6rem;
+}
+
+.hypothesis__rank {
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+  font-family: var(--font-mono);
+}
+
+.stamp {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  padding: 0.2rem 0.55rem;
+  border: 1.5px solid currentColor;
+  border-radius: 2px;
+  transform: rotate(-2deg);
+  display: inline-block;
+  text-transform: uppercase;
+}
+
+.stamp--high {
+  color: var(--high);
+}
+.stamp--medium {
+  color: var(--medium);
+}
+.stamp--low {
+  color: var(--low);
+}
+
+.hypothesis__summary {
+  font-size: 1.05rem;
+  font-weight: 600;
+  line-height: 1.4;
+  margin: 0 0 0.6rem;
+}
+
+.hypothesis__explanation {
+  font-size: 0.92rem;
+  line-height: 1.6;
+  color: var(--ink-soft);
+  margin: 0 0 0.9rem;
+}
+
+.exhibits {
+  border-top: 1px dashed var(--rule);
+  padding-top: 0.7rem;
+}
+
+.exhibits__label {
+  font-size: 0.72rem;
+  color: var(--ink-soft);
+  font-family: var(--font-mono);
+  margin: 0 0 0.4rem;
+}
+
+.exhibits ol {
+  margin: 0;
+  padding-left: 1.3rem;
+  font-size: 0.82rem;
+}
+
+.exhibits li {
+  margin-bottom: 0.3rem;
+}
+
+.exhibits a {
+  color: var(--ink);
+  font-family: var(--font-mono);
+  word-break: break-all;
+}
+
+/* --- Repro panel --- */
+
+.exhibit-panel {
+  border: 1px solid var(--ink);
+  background: var(--paper-light);
+  margin-top: 2rem;
+}
+
+.exhibit-panel__header {
+  background: var(--ink);
+  color: var(--paper-light);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  padding: 0.5rem 1rem;
+  letter-spacing: 0.03em;
+}
+
+.exhibit-panel__code {
+  margin: 0;
+  padding: 1.1rem;
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  line-height: 1.55;
+  overflow-x: auto;
+  white-space: pre;
+}
+
+.exhibit-panel__explanation {
+  padding: 0 1.1rem 1.1rem;
+  font-size: 0.87rem;
+  line-height: 1.55;
+  color: var(--ink-soft);
+}
+
+@media (max-width: 480px) {
+  .case-file {
+    padding: 2rem 1rem 4rem;
+  }
+}
