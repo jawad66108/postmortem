@@ -2,12 +2,12 @@
 import { callModelJSON } from "../nebius/client";
 
 export interface ExtractedError {
-  language: string; // e.g. "python", "javascript", "java"
+  language: string;         // e.g. "python", "javascript", "java"
   framework: string | null; // e.g. "django", "express", "spring" — null if unclear
-  error_class: string; // e.g. "TypeError", "ModuleNotFoundError"
-  message: string; // the core error message, cleaned up
-  symbols: string[]; // function/method/class names implicated in the trace
-  packages: string[]; // dependency/package names mentioned or implied
+  error_class: string;      // e.g. "TypeError", "ModuleNotFoundError"
+  message: string;          // the core error message, cleaned up
+  symbols: string[];        // function/method/class names implicated in the trace
+  packages: string[];       // dependency/package names mentioned or implied
   versions: Record<string, string>; // package -> version, wherever a version is visible in the trace
 }
 
@@ -18,6 +18,9 @@ programming languages and frameworks. Given a raw stack trace or error message, 
 structured metadata about it.
 
 Rules:
+- Your final output must be ONLY the JSON object described below — no reasoning, no explanation,
+  no markdown fences, nothing before or after it. Any chain-of-thought must stay internal; do not
+  print it as part of your response.
 - If a field can't be determined, use null (for strings) or an empty array/object (for lists/maps).
 - "symbols" should list the specific function, method, or class names that appear in the trace's
   call stack, most relevant first.
@@ -31,9 +34,7 @@ Rules:
 Return a JSON object with exactly these keys: language, framework, error_class, message, symbols,
 packages, versions.`;
 
-export async function extractFromTrace(
-  rawTrace: string,
-): Promise<ExtractedError> {
+export async function extractFromTrace(rawTrace: string): Promise<ExtractedError> {
   if (!rawTrace || !rawTrace.trim()) {
     throw new Error("extractFromTrace: received empty input");
   }
@@ -49,19 +50,15 @@ export async function extractFromTrace(
         "extract",
         SYSTEM_PROMPT,
         rawTrace.trim(),
-        { temperature: 0 }, // maxTokens defaults to 3000 in callModelJSON — this model reasons regardless of /no_think, so it needs the room
+        { temperature: 0 } // maxTokens defaults to 3000 in callModelJSON — this model reasons regardless of /no_think, so it needs the room
       );
     } catch (err) {
       // A thrown error (e.g. no valid JSON found at all) is just as much a
       // failed attempt as an empty-but-parseable result — treat it the same
       // way instead of letting it escape the retry loop entirely.
-      console.warn(
-        `[extract] Attempt ${attempt} threw: ${(err as Error).message}`,
-      );
+      console.warn(`[extract] Attempt ${attempt} threw: ${(err as Error).message}`);
       if (attempt === MAX_ATTEMPTS) {
-        console.warn(
-          `[extract] All ${MAX_ATTEMPTS} attempts failed for this input.`,
-        );
+        console.warn(`[extract] All ${MAX_ATTEMPTS} attempts failed for this input.`);
       }
       continue;
     }
@@ -82,9 +79,7 @@ export async function extractFromTrace(
     if (attempt < MAX_ATTEMPTS) {
       console.warn(`[extract] Attempt ${attempt} came back empty, retrying...`);
     } else {
-      console.warn(
-        `[extract] All ${MAX_ATTEMPTS} attempts came back empty for this input.`,
-      );
+      console.warn(`[extract] All ${MAX_ATTEMPTS} attempts came back empty for this input.`);
     }
   }
 
@@ -97,9 +92,6 @@ export async function extractFromTrace(
     message: last.message ?? "",
     symbols: Array.isArray(last.symbols) ? last.symbols : [],
     packages: Array.isArray(last.packages) ? last.packages : [],
-    versions:
-      typeof last.versions === "object" && last.versions !== null
-        ? last.versions
-        : {},
+    versions: typeof last.versions === "object" && last.versions !== null ? last.versions : {},
   };
 }
