@@ -10,7 +10,8 @@
   },
   "dependencies": {
     "react": "^19.3.0",
-    "react-dom": "^19.3.0"
+    "react-dom": "^19.3.0",
+    "thinking-orbs": "^0.3.2"
   },
   "devDependencies": {
     "@types/react": "^19.3.0",

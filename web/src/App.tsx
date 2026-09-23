@@ -4,6 +4,7 @@ import "./postmortem.css";
 import TraceInput from "./components/TraceInput";
 import HypothesisCard, { type Hypothesis } from "./components/HypothesisCard";
 import ReproPanel, { type Reproduction } from "./components/ReproPanel";
+import InvestigatingLoader from "./components/InvestigatingLoader";
 
 interface ExtractedError {
   language: string;
@@ -75,23 +76,21 @@ export default function App() {
 
       <TraceInput onSubmit={handleSubmit} isLoading={isLoading} error={error} />
 
-      {(isLoading || result) && (
-        <div className="status-divider">
-          <span className="status-divider__line" />
-          <span className="status-divider__label">
-            <span
-              className={`status-divider__dot ${isLoading ? "status-divider__dot--active" : ""}`}
-            />
-            {isLoading
-              ? "Cross-referencing repositories and advisories..."
-              : `Investigation complete · ${result!.hypotheses.length} hypothes${result!.hypotheses.length === 1 ? "is" : "es"}`}
-          </span>
-          <span className="status-divider__line" />
-        </div>
-      )}
+      {/* key="investigating" forces a fresh mount each time a new request starts,
+          so the orb/line cycle always restarts from the beginning */}
+      {isLoading && <InvestigatingLoader key="investigating" />}
 
-      {result && (
+      {result && !isLoading && (
         <>
+          <div className="status-divider">
+            <span className="status-divider__line" />
+            <span className="status-divider__label">
+              <span className="status-divider__dot" />
+              Investigation complete · {result.hypotheses.length} hypothes
+              {result.hypotheses.length === 1 ? "is" : "es"}
+            </span>
+            <span className="status-divider__line" />
+          </div>
           {result.hypotheses.map((h) => (
             <HypothesisCard key={h.rank} hypothesis={h} />
           ))}

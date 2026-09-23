@@ -214,6 +214,37 @@ body {
   }
 }
 
+/* --- Investigating loader --- */
+
+.loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.1rem;
+  padding: 2.75rem 1rem;
+  margin: 1.5rem 0;
+}
+
+.loader__line {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  letter-spacing: 0.02em;
+  color: var(--ink-soft);
+  margin: 0;
+  animation: loaderFadeIn 0.4s ease;
+}
+
+@keyframes loaderFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* --- Hypothesis cards --- */
 
 .hypothesis {
