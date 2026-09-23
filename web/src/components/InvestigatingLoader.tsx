@@ -2,8 +2,15 @@
 import { useEffect, useState } from "react";
 import { ThinkingOrb } from "thinking-orbs";
 
-const ORB_STATES = ["working", "connecting", "solving"] as const;
-const ORB_INTERVAL_MS = 5000;
+const ORB_STATES = [
+  "working",
+  "connecting",
+  "solving",
+  "weaving",
+  "searching",
+] as const;
+const ORB_INTERVAL_MS = 7500;
+const ORB_SIZE = 64;
 
 const LOADING_LINES = [
   "Fetching your data…",
@@ -21,7 +28,7 @@ const LOADING_LINES = [
   "Nearly there…",
   "Here it comes…",
 ];
-const LINE_INTERVAL_MS = 1750;
+const LINE_INTERVAL_MS = 2500;
 
 // A fresh mount each time isLoading flips true (see App.tsx, key={...}) means
 // these intervals always restart cleanly at the beginning of a new investigation.
@@ -47,7 +54,7 @@ export default function InvestigatingLoader() {
     <div className="loader">
       <ThinkingOrb
         state={ORB_STATES[orbIndex]}
-        size={64}
+        size={ORB_SIZE}
         theme="light"
         speed={1.1}
       />
