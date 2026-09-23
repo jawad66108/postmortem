@@ -65,6 +65,7 @@ export default function App() {
 
   return (
     <div className="case-file">
+      <div className="case-file__kicker">Root-cause investigation</div>
       <h1 className="case-file__title">Postmortem</h1>
       <p className="case-file__subtitle">
         Paste a stack trace. It searches live issue trackers, changelogs, and
@@ -73,6 +74,21 @@ export default function App() {
       </p>
 
       <TraceInput onSubmit={handleSubmit} isLoading={isLoading} error={error} />
+
+      {(isLoading || result) && (
+        <div className="status-divider">
+          <span className="status-divider__line" />
+          <span className="status-divider__label">
+            <span
+              className={`status-divider__dot ${isLoading ? "status-divider__dot--active" : ""}`}
+            />
+            {isLoading
+              ? "Cross-referencing repositories and advisories..."
+              : `Investigation complete · ${result!.hypotheses.length} hypothes${result!.hypotheses.length === 1 ? "is" : "es"}`}
+          </span>
+          <span className="status-divider__line" />
+        </div>
+      )}
 
       {result && (
         <>

@@ -22,26 +22,32 @@ export default function HypothesisCard({
   hypothesis: Hypothesis;
 }) {
   const { rank, summary, explanation, confidence, sources } = hypothesis;
+  const paddedRank = String(rank).padStart(2, "0");
 
   return (
     <article className="hypothesis">
       <div className="hypothesis__header">
-        <span className="hypothesis__rank">Hypothesis {rank}</span>
+        <span className="hypothesis__rank">Hypothesis {paddedRank}</span>
         <span className={`stamp stamp--${confidence}`}>
           {confidence} confidence
         </span>
       </div>
-      <h3 className="hypothesis__summary">{summary}</h3>
-      <p className="hypothesis__explanation">{explanation}</p>
+      <div className="hypothesis__body">
+        <h3 className="hypothesis__summary">{summary}</h3>
+        <p className="hypothesis__explanation">{explanation}</p>
+      </div>
 
       {sources.length > 0 && (
         <div className="exhibits">
-          <p className="exhibits__label">Exhibits</p>
+          <p className="exhibits__label">Evidence exhibits</p>
           <ol>
-            {sources.map((url) => (
+            {sources.map((url, i) => (
               <li key={url}>
                 <a href={url} target="_blank" rel="noopener noreferrer">
-                  {hostnameOf(url)}
+                  <span className="exhibits__num">
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  <span>{hostnameOf(url)}</span>
                 </a>
               </li>
             ))}
